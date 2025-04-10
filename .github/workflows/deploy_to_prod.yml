@@ -30,24 +30,17 @@ jobs:
         run: mvn clean
       - name: Executar Testes
         run: mvn test
-      - name: Incrementar Versão
-        id: increment-version
+      - name: Build do Projeto
+        run: mvn package -DskipTests
+      - name: Confirmar versao do codigo
         run: |
-            $current = "${{ steps.get-current-version.outputs.current_version }}"
-            $versionParts = $current -split '\.'
-            if ($versionParts.Count -ge 3) {
-            $major = [int]$versionParts[0]
-            $minor = [int]$versionParts[1]
-            $patch = [int]$versionParts[2]
-            $next="$major.$minor.($patch + 1)"
-            echo "Próxima versão (incrementando patch): $next"
-            echo "new_version=$next" >> "$GITHUB_OUTPUT"
-            } else {
-            echo "Formato de versão inesperado: $current"
-            exit 1
-            }
-      - name: Definir Nova Versão no POM
-        run: mvn versions:set -DnewVersion="${{ steps.increment-version.outputs.new_version }}"
-      - name: Confirmar versão após incremento
+          echo "nova versão é: ${{ steps.increment-version.new_version }}"
+      - name: copiar artefato
         run: |
-          echo "Nova versão é: ${{ steps.increment-version.outputs.new_version }}"
+          cp target/*.jar docker/app.jar
+      - name: Build Docker Image
+        run: docker build . -f docker/Dockerfile -t biblioteca:2.0
+      - name: Criar TAG
+        run: docker tag biblioteca:2.0 denisefc/biblioteca:2.0
+      - name: Criar TAG latest
+        run: docker tag biblioteca:2.0 denisefc/biblioteca:latest
