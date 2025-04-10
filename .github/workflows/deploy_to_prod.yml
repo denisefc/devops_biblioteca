@@ -31,21 +31,23 @@ jobs:
       - name: Executar Testes
         run: mvn test
       - name: Incrementar Versão
+        id: increment-version
         run: |
-          $current = $(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
-          echo "Versão atual: $current"
-
-          $versionParts = $current -split '\.'
-          $major = [int]$versionParts[0]
-          $minor = [int]$versionParts[1]
-          $patch = [int]$versionParts[2]
-
-          $new_major = $major + 1
-          $next="$major.$minor.($patch + 1)"
-          echo "Próxima versão (incrementando patch): $next"
-
-          mvn versions:set -DnewVersion="$next"
-          echo "new_version=$next" >> "$GITHUB_OUTPUT"
+            $current = "${{ steps.get-current-version.outputs.current_version }}"
+            $versionParts = $current -split '\.'
+            if ($versionParts.Count -ge 3) {
+            $major = [int]$versionParts[0]
+            $minor = [int]$versionParts[1]
+            $patch = [int]$versionParts[2]
+            $next="$major.$minor.($patch + 1)"
+            echo "Próxima versão (incrementando patch): $next"
+            echo "new_version=$next" >> "$GITHUB_OUTPUT"
+            } else {
+            echo "Formato de versão inesperado: $current"
+            exit 1
+            }
+      - name: Definir Nova Versão no POM
+        run: mvn versions:set -DnewVersion="${{ steps.increment-version.outputs.new_version }}"
       - name: Confirmar versão após incremento
         run: |
           echo "Nova versão é: ${{ steps.increment-version.outputs.new_version }}"
