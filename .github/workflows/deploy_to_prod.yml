@@ -10,7 +10,7 @@ jobs:
     steps:
       - name: Iniciando job
         run: |
-          echo "Iniciando JOB em $(date)"
+          echo "Iniciando job em $(date)"
       - name: Checkout codigo
         uses: actions/checkout@v4
       - name: Configurando o Ambiente
@@ -30,11 +30,37 @@ jobs:
         run: mvn clean
       #- name: Executar Testes
       #  run: mvn test
-      - name: Build do Projeto
-        run: mvn package -DskipTests
-      - name: Confirmar versao do codigo
+      - name: Obter Versão Maven
+        id: get-maven-version
+        run: |
+          current_version=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+          echo "Versão atual (obtida do Maven): $current_version"
+          echo "current_version=$current_version" >> "$GITHUB_OUTPUT"
+      - name: Incrementar Versão
+        id: increment-version
+        shell: pwsh
+        run: |
+          $current = "${{ steps.get-maven-version.outputs.current_version }}"
+          echo "Versão atual para incremento: $current"
+          $versionParts = $current -split '\.'
+          if ($versionParts.Count -ge 3) {
+           $major = [int]$versionParts[0]
+           $minor = [int]$versionParts[1]
+           $patch = [int]$versionParts[2]
+           $next="$major.$minor.($patch + 1)"
+           echo "Próxima versão (incrementando patch): $next"
+           echo "new_version=$next" >> "$GITHUB_OUTPUT"
+           } else {
+             echo "Formato de versão inesperado: $current"
+             exit 1
+           }
+      - name: Definir Nova Versão no POM
+        run: mvn versions:set -DnewVersion="${{ steps.increment-version.outputs.new_version }}"
+      - name: Confirmar versão após incremento
         run: |
           echo "nova versão é: ${{ steps.increment-version.new_version }}"
+      - name: Build do Projeto
+        run: mvn package -DskipTests
       - name: copiar artefato
         run: |
           cp target/*.jar docker/app.jar
