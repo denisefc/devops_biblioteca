@@ -30,18 +30,21 @@ jobs:
         run: mvn clean
       - name: Executar Testes
         run: mvn test
-      - name: Incrementar versão (patch)
-        id: increment-version
+      - name: Incrementar Versão
         run: |
-          current=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+          $current = $(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
           echo "Versão atual: $current"
 
-          IFS='.' read -r major minor patch <<< "$current"
-          new_major=$((major + 1))
-          next="$major.$minor.$((patch + 1))"
-          echo "Nova versão: $next"
+          $versionParts = $current -split '\.'
+          $major = [int]$versionParts[0]
+          $minor = [int]$versionParts[1]
+          $patch = [int]$versionParts[2]
 
-          mvn versions:set -DnewVersion=$next
+          $new_major = $major + 1
+          $next="$major.$minor.($patch + 1)"
+          echo "Próxima versão (incrementando patch): $next"
+
+          mvn versions:set -DnewVersion="$next"
           echo "new_version=$next" >> "$GITHUB_OUTPUT"
       - name: Confirmar versão após incremento
         run: |
