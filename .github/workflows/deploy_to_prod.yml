@@ -18,3 +18,15 @@ jobs:
         with:
           distribution: "corretto"
           java-version: '17'
+      - name: Setup Maven
+        uses: stCarolas/setup-maven@v5
+        with:
+          maven-version: '3.8.2'
+      - name: Verificar versões da JVM e do Maven
+        run: |
+          java -version
+          mvn -version
+      - name: Limpar diretorio
+        run: mvn clean
+      - name: Executar Testes
+        run: mvn test
