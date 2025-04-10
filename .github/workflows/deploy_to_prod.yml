@@ -1,0 +1,20 @@
+name: meu workflow
+
+on:
+  push:
+    branches:
+      - main
+jobs:
+  build:
+    runs-on: self-hosted
+    steps:
+      - name: Iniciando JOB
+        run: |
+          echo "Iniciando JOB em $(date)"
+      - name: Checkout codigo
+        uses: actions/checkout@v4
+      - name: Configurando o Ambiente
+        uses: actions/setup-java@v3
+        with:
+          distributions: "corretto"
+          java-version: '17'
