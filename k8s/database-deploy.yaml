@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bib-database-deploy
+  namespace: biblioteca
+  labels:
+    app: database
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: database
+  template:
+    metadata:
+      name: bib-database-pod
+      labels:
+        app: database
+    spec:
+      containers:
+        - name: bib-database-container
+          image: denisefc/bib-database:latest
+          imagePullPolicy: IfNotPresent

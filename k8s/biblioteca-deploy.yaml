@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: biblioteca-deploy
+  namespace: biblioteca
+  labels:
+    app: biblioteca
+spec:
+  replicas: 4
+  selector:
+    matchLabels:
+      app: biblioteca
+  template:
+    metadata:
+      name: biblioteca-pod
+      labels:
+        app: biblioteca
+    spec:
+      containers:
+        - image: denisefc/biblioteca:latest
+          imagePullPolicy: Always
+          name: biblioteca-container
+          readinessProbe:
+            httpGet:
+              port: 8080
+              path: /actuator/health
+            initialDelaySeconds: 5
+            successThreshold: 1
+            failureThreshold: 3
+            periodSeconds: 3
+          livenessProbe:
+            httpGet:
+              port: 8080
+              path: /actuator/health
+            initialDelaySeconds: 20
+            successThreshold: 1
+            failureThreshold: 3
+            periodSeconds: 10
