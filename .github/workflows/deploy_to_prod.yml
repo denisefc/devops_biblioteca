@@ -30,34 +30,6 @@ jobs:
         run: mvn clean
       #- name: Executar Testes
       #  run: mvn test
-      - name: Obter Versão Maven
-        id: get-maven-version
-        run: |
-          $current_version = & mvn help:evaluate -Dexpression=project.version -q -DforceStdout
-          echo "Versão atual (obtida do Maven): $current_version"
-          echo "current_version=$current_version" >> "$GITHUB_OUTPUT"
-      - name: Incrementar Versão
-        id: increment-version
-        run: |
-          $current = "${{ steps.get-maven-version.outputs.current_version }}"
-          echo "Versão atual para incremento: $current"
-          $versionParts = $current -split '\.'
-          if ($versionParts.Count -ge 3) {
-           $major = [int]$versionParts[0]
-           $minor = [int]$versionParts[1]
-           $patch = [int]$versionParts[2]
-           $next="$major.$minor.($patch + 1)"
-           echo "Próxima versão (incrementando patch): $next"
-           echo "new_version=$next" >> "$GITHUB_OUTPUT"
-           } else {
-             echo "Formato de versão inesperado: $current"
-             exit 1
-           }
-      - name: Definir Nova Versão no POM
-        run: mvn versions:set -DnewVersion="${{ steps.increment-version.outputs.new_version }}"
-      - name: Confirmar versão após incremento
-        run: |
-          echo "nova versão é: ${{ steps.increment-version.new_version }}"
       - name: Build do Projeto
         run: mvn package -DskipTests
       - name: copiar artefato
@@ -69,3 +41,14 @@ jobs:
         run: docker tag biblioteca:2.0 denisefc/biblioteca:2.0
       - name: Criar TAG latest
         run: docker tag biblioteca:2.0 denisefc/biblioteca:latest
+      - name: Docker Login
+        run: |
+          echo ${{ secrets.DOCKER_TOKEN }} | docker login --username ${{ secrets.DOCKER_USER }} --password-stdin
+      - name: Docker Push
+        run: docker push denisefc/biblioteca:2.0
+      - name: Docker Push latest
+        run: docker push denisefc/biblioteca:latest
+      - name: Atualizando K8s
+        run: kubectl rollout restart deploy biblioteca-deploy -n biblioteca
+      - name: Status do Deploy
+        run: kubectl rollout status deploy biblioteca-deploy -n biblioteca
