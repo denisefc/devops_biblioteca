@@ -32,14 +32,12 @@ jobs:
       #  run: mvn test
       - name: Obter Versão Maven
         id: get-maven-version
-        shell: pwsh
         run: |
           $current_version = & mvn help:evaluate -Dexpression=project.version -q -DforceStdout
           echo "Versão atual (obtida do Maven): $current_version"
           echo "current_version=$current_version" >> "$GITHUB_OUTPUT"
       - name: Incrementar Versão
         id: increment-version
-        shell: pwsh
         run: |
           $current = "${{ steps.get-maven-version.outputs.current_version }}"
           echo "Versão atual para incremento: $current"
