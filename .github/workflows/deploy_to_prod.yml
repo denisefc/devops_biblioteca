@@ -30,12 +30,18 @@ jobs:
         run: mvn clean
       #- name: Executar Testes
       #  run: mvn test
-      - name: Obter versão
+      - name: Extract Maven project version
+        run: echo ::set-output name=version::$(mvn -q -Dexec.executable=echo -Dexec.args='${project.version}' --non-recursive exec:exec)
+        id: project
+      - name: Show extracted Maven project version
+        run: echo ${{ steps.project.outputs.version }}
+      - name: Incrementar versão
+        id: increment-version
         run: |
-          $current = & mvn help:evaluate -Dexpression=project.version -q -DforceStdout
-          echo "Versão atual (obtida do Maven): $current"
-          echo "current_version=$current" >> "$GITHUB_OUTPUT"
-
+          mvn build-helper:parse-version versions:set@major
+      - name: Confirmar versao do codigo
+        run: |
+          echo "A nova versão é: ${{ steps.increment-version.new_version }}"
       - name: Build do Projeto
         run: mvn package -DskipTests
       - name: Copiar artefato
