@@ -30,6 +30,21 @@ jobs:
         run: mvn clean
       #- name: Executar Testes
       #  run: mvn test
+      - name: Incrementar versão
+        id: increment-version
+        shell: bash
+        run: |
+          current=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+          echo "Versão atual: $current"
+
+          IFS='.' read -r major minor patch <<< "$current"
+          new_major=$((major + 1))
+          next="$new_major.$minor.$patch"
+          echo "Nova versão: $next"
+
+          mvn versions:set -DnewVersion=$next
+          new_version=$next" >> "$GITHUB_OUTPUT
+          echo "new_version=$next" >> "$GITHUB_OUTPUT"
       - name: Build do Projeto
         run: mvn package -DskipTests
       - name: Copiar artefato
@@ -41,7 +56,7 @@ jobs:
         run: docker tag biblioteca:2.0 denisefc/biblioteca:2.0
       - name: Criar TAG latest
         run: docker tag biblioteca:2.0 denisefc/biblioteca:latest
-      - name: Docker lOGIN
+      - name: Docker Login
         uses: docker/login-action@v1
         with:
           username: ${{ secrets.DOCKER_USER }}
