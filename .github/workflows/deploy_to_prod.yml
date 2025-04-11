@@ -32,9 +32,9 @@ jobs:
       #  run: mvn test
       - name: Obter versão
         run: |
-          current=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
-          echo "Versão atual: $current"
-
+          $current = & mvn help:evaluate -Dexpression=project.version -q -DforceStdout
+          echo "Versão atual (obtida do Maven): $current"
+          echo "current_version=$current" >> "$GITHUB_OUTPUT"
 
       - name: Build do Projeto
         run: mvn package -DskipTests
