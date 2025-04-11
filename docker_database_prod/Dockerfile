@@ -1,0 +1,4 @@
+FROM postgres:latest
+EXPOSE 5432
+ENV POSTGRES_PASSWORD=root
+ENV POSTGRES_DB=livro

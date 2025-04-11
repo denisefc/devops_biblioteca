@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bib-database-prod-deploy
+  namespace: biblioteca
+  labels:
+    app: database
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: database
+  template:
+    metadata:
+      name: bib-database-prod-pod
+      labels:
+        app: database
+    spec:
+      volumes:
+        - name: biblioteca-database
+          persistentVolumeClaim:
+            claimName: biblioteca-pvc
+      containers:
+        - name: bib-database-prod-container
+          image: denisefc/bib-database:prod
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - mountPath: /var/lib/postgresql/data
+              name: biblioteca-database
