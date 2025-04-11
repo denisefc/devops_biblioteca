@@ -11,14 +11,14 @@ jobs:
       - name: Iniciando job
         run: |
           echo "Iniciando job em $(date)"
-      - name: Checkout codigo
+      - name: Checkout do código
         uses: actions/checkout@v4
-      - name: Configurando o Ambiente
+      - name: Configurando o ambiente
         uses: actions/setup-java@v3
         with:
           distribution: "corretto"
           java-version: '17'
-      - name: Setup Maven
+      - name: Setup - Maven
         uses: stCarolas/setup-maven@v5
         with:
           maven-version: '3.8.2'
@@ -26,19 +26,19 @@ jobs:
         run: |
           java -version
           mvn -version
-      - name: Limpar diretorio
+      - name: Limpar diretório
         run: mvn clean
-      #- name: Executar Testes
-      #  run: mvn test
+      - name: Executar Testes
+        run: mvn test
       - name: Incrementar versão
         id: increment-version
         run: |
           mvn build-helper:parse-version versions:set@major
           echo "new_version=$next" >> "$GITHUB_OUTPUT"
-      - name: Confirmar versao do codigo
+      - name: Confirmar versão do código
         run: |
           echo "A nova versão é: ${{ steps.increment-version.new_version }}"
-      - name: Build do Projeto
+      - name: Build do projeto
         run: mvn package -DskipTests
       - name: Copiar artefato
         run: |
@@ -49,16 +49,16 @@ jobs:
         run: docker tag biblioteca:2.0 denisefc/biblioteca:2.0
       - name: Criar TAG latest
         run: docker tag biblioteca:2.0 denisefc/biblioteca:latest
-      - name: Docker Login
+      - name: Docker login
         uses: docker/login-action@v1
         with:
           username: ${{ secrets.DOCKER_USER }}
           password: ${{ secrets.DOCKER_TOKEN }}
-      - name: Docker Push
+      - name: Docker push
         run: docker push denisefc/biblioteca:2.0
-      - name: Docker Push latest
+      - name: Docker push latest
         run: docker push denisefc/biblioteca:latest
-      - name: Atualizando K8s
+      - name: Atualizando k8s
         run: kubectl rollout restart deploy biblioteca-deploy -n biblioteca
-      - name: Status do Deploy
+      - name: Status do deploy
         run: kubectl rollout status deploy biblioteca-deploy -n biblioteca
