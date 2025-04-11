@@ -34,6 +34,7 @@ jobs:
         id: increment-version
         run: |
           mvn build-helper:parse-version versions:set@major
+          echo "new_version=$next" >> "$GITHUB_OUTPUT"
       - name: Confirmar versao do codigo
         run: |
           echo "A nova versão é: ${{ steps.increment-version.new_version }}"
