@@ -1,0 +1,69 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prometheus-deploy
+  namespace: biblioteca
+  labels:
+    app: prometheus
+spec:
+  replicas: 1
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app: prometheus
+  template:
+    metadata:
+      name: prometheus-pod
+      labels:
+        app: prometheus
+    spec:
+      volumes:
+          - name: prometheus-config-volume
+            configMap:
+              defaultMode: 420
+              name: prometheus-config
+          - name: prometheus-storage-volume
+            persistentVolumeClaim:
+              claimName: prometheus-pvc
+      initContainers:
+        - name: prometheus-data-permission-setup
+          image: busybox
+          command: [ "/bin/chown","-R","65534:65534","/prometheus" ]
+          volumeMounts:
+            - name: prometheus-storage-volume
+              mountPath: /prometheus/data
+      containers:
+        - name: prometheus
+          image: prom/prometheus
+          securityContext:
+            runAsUser: 65534
+            runAsGroup: 65534
+          args:
+            - '--storage.tsdb.retention.time=6h'
+            - '--storage.tsdb.path=/prometheus'
+            - '--config.file=/etc/prometheus/prometheus.yml'
+          readinessProbe:
+            httpGet:
+              port: 9090
+              path: /-/ready
+            initialDelaySeconds: 5
+            successThreshold: 1
+            failureThreshold: 3
+            periodSeconds: 3
+          livenessProbe:
+            httpGet:
+              port: 9090
+              path: /-/healthy
+            initialDelaySeconds: 10
+            successThreshold: 1
+            failureThreshold: 3
+            periodSeconds: 5
+          volumeMounts:
+            - name: prometheus-config-volume
+              mountPath: /etc/prometheus
+            - name: prometheus-storage-volume
+              mountPath: /prometheus
